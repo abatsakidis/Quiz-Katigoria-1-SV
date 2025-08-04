@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz Ραδιοερασιτέχνη - Κατηγορία 1 (SV)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Orbitron', sans-serif;
+      background-color: #0e1a25;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+    }
+    .quiz-container {
+      background-color: #1c2e3f;
+      border-radius: 1rem;
+      padding: 2rem;
+      max-width: 700px;
+      width: 100%;
+      box-shadow: 0 0 20px rgba(0,255,255,0.3);
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+    .question {
+      margin-bottom: 1.5rem;
+    }
+    .answers button {
+      display: block;
+      width: 100%;
+      margin-bottom: 0.5rem;
+      background-color: #2e4a62;
+      color: #fff;
+      border: none;
+      padding: 0.75rem;
+      font-size: 1rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+    }
+    .answers button:hover {
+      background-color: #3f6686;
+    }
+    .result {
+      margin-top: 1rem;
+      font-weight: bold;
+    }
+    .next-btn {
+      margin-top: 1rem;
+      padding: 0.75rem 1.5rem;
+      background-color: #00c4cc;
+      border: none;
+      color: #000;
+      font-weight: bold;
+      border-radius: 0.5rem;
+      cursor: pointer;
+    }
+    .next-btn:hover {
+      background-color: #00e0e0;
+    }
+  </style>
+</head>
+<body>
+  <div class="quiz-container">
+    <h1>Quiz Ραδιοερασιτέχνη - Κατηγορία 1 (SV)</h1>
+    <div class="question" id="question"></div>
+    <div class="answers" id="answers"></div>
+    <div class="result" id="result"></div>
+    <button class="next-btn" id="nextBtn" style="display: none;">Επόμενη</button>
+  </div>
+
+  <script>
+    let questions = [];
+    let currentQuestionIndex = 0;
+    let answered = false;
+
+    async function loadQuestions() {
+      const res = await fetch('erotiseis_sz1a.json');
+      questions = await res.json();
+      showQuestion();
+    }
+
+    function showQuestion() {
+      answered = false;
+      const q = questions[currentQuestionIndex];
+      document.getElementById('question').innerText = q.question;
+      const answersDiv = document.getElementById('answers');
+      answersDiv.innerHTML = '';
+      document.getElementById('result').innerText = '';
+      document.getElementById('nextBtn').style.display = 'none';
+
+      q.options.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.innerText = opt;
+        btn.onclick = () => handleAnswer(idx + 1, q.correct_answer);
+        answersDiv.appendChild(btn);
+      });
+    }
+
+    function handleAnswer(selected, correct) {
+      if (answered) return;
+      answered = true;
+      const resultDiv = document.getElementById('result');
+      if (selected === correct) {
+        resultDiv.innerText = '✅ Σωστή απάντηση!';
+        resultDiv.style.color = '#00ff88';
+      } else {
+        resultDiv.innerText = `❌ Λάθος. Σωστή απάντηση: ${correct}`;
+        resultDiv.style.color = '#ff5555';
+      }
+      document.getElementById('nextBtn').style.display = 'inline-block';
+    }
+
+    document.getElementById('nextBtn').onclick = () => {
+      currentQuestionIndex++;
+      if (currentQuestionIndex < questions.length) {
+        showQuestion();
+      } else {
+        document.getElementById('question').innerText = '🎉 Τέλος ερωτήσεων!';
+        document.getElementById('answers').innerHTML = '';
+        document.getElementById('result').innerText = '';
+        document.getElementById('nextBtn').style.display = 'none';
+      }
+    };
+
+    loadQuestions();
+  </script>
+</body>
+</html>
