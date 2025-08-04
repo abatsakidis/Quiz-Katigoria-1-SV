@@ -74,29 +74,41 @@
 <body>
   <div class="quiz-container">
     <h1>Quiz Ραδιοερασιτέχνη - Κατηγορία 1 (SV)</h1>
-
     <div class="question" id="question"></div>
     <div id="questionImageContainer"></div>
     <div class="answers" id="answers"></div>
     <div class="result" id="result"></div>
     <button class="next-btn" id="nextBtn" style="display: none;">Επόμενη</button>
-		
   </div>
    <center><h2>(C) Copyright 2025 - Μπατσακίδης Αθανάσιος <h2></center>
   <script>
     let questions = [];
     let currentQuestionIndex = 0;
     let answered = false;
+    const STORAGE_KEY = 'radioamateur_quiz_currentQuestion';
 
     async function loadQuestions() {
       const res = await fetch('erotiseis_sz1a.json');
       questions = await res.json();
+
+      // Φορτώνουμε από το localStorage το index
+      const savedIndex = localStorage.getItem(STORAGE_KEY);
+      if (savedIndex !== null) {
+        const idx = parseInt(savedIndex, 10);
+        if (!isNaN(idx) && idx >= 0 && idx < questions.length) {
+          currentQuestionIndex = idx;
+        }
+      }
+
       showQuestion();
     }
 
     function showQuestion() {
       answered = false;
       const q = questions[currentQuestionIndex];
+
+      // Αποθήκευση τρέχουσας ερώτησης στο localStorage
+      localStorage.setItem(STORAGE_KEY, currentQuestionIndex);
 
       // Ερώτηση
       document.getElementById('question').innerText = q.question;
@@ -150,6 +162,9 @@
         document.getElementById('questionImageContainer').innerHTML = '';
         document.getElementById('result').innerText = '';
         document.getElementById('nextBtn').style.display = 'none';
+
+        // Καθαρίζουμε το αποθηκευμένο index αφού τελείωσε το quiz
+        localStorage.removeItem(STORAGE_KEY);
       }
     };
 
