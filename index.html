@@ -22,6 +22,7 @@
       max-width: 700px;
       width: 100%;
       box-shadow: 0 0 20px rgba(0,255,255,0.3);
+      position: relative;
     }
     h1 {
       text-align: center;
@@ -93,16 +94,50 @@
       border: none;
       cursor: pointer;
     }
+    #helpBtn {
+      background-color: #ffaa00;
+      color: #000;
+    }
+    #helpBtn:hover {
+      background-color: #ffc966;
+    }
+
+    /* Lightbox Modal */
+    #helpModal {
+      display: none;
+      position: fixed;
+      z-index: 9999;
+      left: 0; top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.7);
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-content {
+      background-color: #fff;
+      color: #000;
+      padding: 2rem;
+      border-radius: 1rem;
+      max-width: 500px;
+      width: 90%;
+      position: relative;
+      text-align: left;
+    }
+    .modal-close {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
   <div class="quiz-container">
     <h1>Quiz Ραδιοερασιτέχνη - Κατηγορία 1 (SV)</h1>
-
-    <!-- Εμφάνιση αριθμού ερώτησης -->
     <div id="questionCounter"></div>
 
-    <!-- Επιλογή ερώτησης / random -->
     <div class="setup">
       <label>Έναρξη από ερώτηση:
         <input type="number" id="startFrom" min="1" />
@@ -110,6 +145,7 @@
       <br />
       <button onclick="startQuiz(false)">Ξεκίνα Κανονικά</button>
       <button onclick="startQuiz(true)">Τυχαία Σειρά</button>
+      <button id="helpBtn">Βοήθεια</button>
     </div>
 
     <div class="question" id="question"></div>
@@ -120,6 +156,21 @@
   </div>
   <center><h2>(C) Copyright 2025 - Μπατσακίδης Αθανάσιος</h2></center>
 
+  <!-- Lightbox Modal -->
+  <div id="helpModal">
+    <div class="modal-content">
+      <span class="modal-close" id="modalCloseBtn">&times;</span>
+      <h2>Οδηγίες Χρήσης</h2>
+      <ul>
+        <li>Επιλέξτε από ποια ερώτηση θέλετε να ξεκινήσετε ή αφήστε το κενό.</li>
+        <li>Πατήστε "Ξεκίνα Κανονικά" για διαδοχικές ερωτήσεις ή "Τυχαία Σειρά" για ανακατεμένες.</li>
+        <li>Απαντήστε πατώντας στην επιλογή που πιστεύετε ότι είναι σωστή.</li>
+        <li>Μετά από κάθε απάντηση εμφανίζεται η σωστή λύση και το κουμπί "Επόμενη".</li>
+        <li>Στο τέλος των ερωτήσεων εμφανίζεται μήνυμα ολοκλήρωσης.</li>
+      </ul>
+    </div>
+  </div>
+
   <script>
     let questions = [];
     let originalQuestions = [];
@@ -128,18 +179,15 @@
     let randomMode = false;
     const STORAGE_KEY = 'radioamateur_quiz_currentQuestion';
 
-	async function loadQuestions() {
-	  const res = await fetch('erotiseis_sz1a.json');
-	  const data = await res.json();
-	  // Κρατάμε το αρχικό index κάθε ερώτησης
-	  originalQuestions = data.map((q, i) => ({ ...q, originalIndex: i }));
-	  questions = [...originalQuestions];
-	}
-
+    async function loadQuestions() {
+      const res = await fetch('erotiseis_sz1a.json');
+      const data = await res.json();
+      originalQuestions = data.map((q, i) => ({ ...q, originalIndex: i }));
+      questions = [...originalQuestions];
+    }
 
     function startQuiz(useRandom) {
       randomMode = useRandom;
-
       const startFromInput = document.getElementById('startFrom').value;
       const startIndex = parseInt(startFromInput, 10) - 1;
 
@@ -173,18 +221,12 @@
       answered = false;
       const q = questions[currentQuestionIndex];
 
-      // Εμφάνιση αριθμού ερώτησης
-		document.getElementById('questionCounter').innerText =
-		  `Ερώτηση ${q.originalIndex + 1} / ${questions.length}`;
+      document.getElementById('questionCounter').innerText =
+        `Ερώτηση ${q.originalIndex + 1} / ${questions.length}`;
 
-
-      // Αποθήκευση index
       localStorage.setItem(STORAGE_KEY, currentQuestionIndex);
-
-      // Ερώτηση
       document.getElementById('question').innerText = q.question;
 
-      // Εικόνα
       const imageContainer = document.getElementById('questionImageContainer');
       imageContainer.innerHTML = '';
       if (q.image) {
@@ -195,7 +237,6 @@
         imageContainer.appendChild(img);
       }
 
-      // Απαντήσεις
       const answersDiv = document.getElementById('answers');
       answersDiv.innerHTML = '';
       document.getElementById('result').innerText = '';
@@ -234,12 +275,24 @@
         document.getElementById('result').innerText = '';
         document.getElementById('nextBtn').style.display = 'none';
         document.getElementById('questionCounter').innerText = '';
-
         localStorage.removeItem(STORAGE_KEY);
       }
     };
 
     loadQuestions();
+
+    // Lightbox λειτουργία
+    const helpBtn = document.getElementById('helpBtn');
+    const helpModal = document.getElementById('helpModal');
+    const modalCloseBtn = document.getElementById('modalCloseBtn');
+
+    helpBtn.onclick = () => helpModal.style.display = 'flex';
+    modalCloseBtn.onclick = () => helpModal.style.display = 'none';
+    window.onclick = (e) => {
+      if (e.target === helpModal) {
+        helpModal.style.display = 'none';
+      }
+    };
   </script>
 </body>
 </html>
