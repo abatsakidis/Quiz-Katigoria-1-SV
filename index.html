@@ -128,12 +128,14 @@
     let randomMode = false;
     const STORAGE_KEY = 'radioamateur_quiz_currentQuestion';
 
-    async function loadQuestions() {
-      const res = await fetch('erotiseis_sz1a.json');
-      const data = await res.json();
-      originalQuestions = [...data];
-      questions = [...data];
-    }
+	async function loadQuestions() {
+	  const res = await fetch('erotiseis_sz1a.json');
+	  const data = await res.json();
+	  // Κρατάμε το αρχικό index κάθε ερώτησης
+	  originalQuestions = data.map((q, i) => ({ ...q, originalIndex: i }));
+	  questions = [...originalQuestions];
+	}
+
 
     function startQuiz(useRandom) {
       randomMode = useRandom;
@@ -172,8 +174,9 @@
       const q = questions[currentQuestionIndex];
 
       // Εμφάνιση αριθμού ερώτησης
-      document.getElementById('questionCounter').innerText =
-        `Ερώτηση ${currentQuestionIndex + 1} / ${questions.length}`;
+		document.getElementById('questionCounter').innerText =
+		  `Ερώτηση ${q.originalIndex + 1} / ${questions.length}`;
+
 
       // Αποθήκευση index
       localStorage.setItem(STORAGE_KEY, currentQuestionIndex);
