@@ -1,4 +1,4 @@
-const CACHE_NAME = 'quiz-cache-v2'; // άλλαξε για να αναγκαστεί ανανέωση
+const CACHE_NAME = 'quiz-cache-v3'; // άλλαξε για να αναγκαστεί ανανέωση
 const VERSION_URL = 'https://abatsakidis.github.io/Quiz-Katigoria-1-SV/version.json';
 const VERSION_CACHE = 'version-cache';
 
