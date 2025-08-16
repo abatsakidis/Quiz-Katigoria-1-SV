@@ -151,6 +151,8 @@
       currentQuestionIndex++;
       if (currentQuestionIndex < questions.length) showQuestion();
       else {
+	    document.getElementById('result').innerText = '';
+	  
         document.getElementById('question').innerText = '🎉 Ολοκλήρωσες όλες τις ερωτήσεις!';
         document.getElementById('answers').innerHTML = '';
         document.getElementById('nextBtn').style.display = 'none';
