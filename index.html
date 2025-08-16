@@ -45,6 +45,7 @@
       <br />
       <button onclick="startQuiz(false)">Ξεκίνα Κανονικά</button>
       <button onclick="startQuiz(true)">Τυχαία Σειρά</button>
+	  <button onclick="startWrongQuestions()" id="retryWrongBtn" style="margin-left: 0.5rem;">Ξανακάνε τα Λάθος</button>
       <button id="helpBtn">Βοήθεια</button>
       <button id="installBtn">📲 Αποθήκευση ως εφαρμογή</button>
     </div>
@@ -63,10 +64,11 @@
       <h2>Οδηγίες Χρήσης</h2>
       <ul>
         <li>Επιλέξτε από ποια ερώτηση θέλετε να ξεκινήσετε ή αφήστε το κενό.</li>
-        <li>Πατήστε "Ξεκίνα Κανονικά" για διαδοχικές ερωτήσεις ή "Τυχαία Σειρά" για ανακατεμένες.</li>
+        <li>Πατήστε "<strong>Ξεκίνα Κανονικά</strong>" για διαδοχικές ερωτήσεις ή "Τυχαία Σειρά" για ανακατεμένες.</li>
         <li>Απαντήστε πατώντας στην επιλογή που πιστεύετε ότι είναι σωστή.</li>
-        <li>Μετά από κάθε απάντηση εμφανίζεται η σωστή λύση και το κουμπί "Επόμενη".</li>
+        <li>Μετά από κάθε απάντηση εμφανίζεται η σωστή λύση και το κουμπί "<strong>Επόμενη</strong>".</li>
         <li>Στο τέλος των ερωτήσεων εμφανίζεται μήνυμα ολοκλήρωσης.</li>
+		<li>Μπορείτε να ξανακάνετε μόνο τις ερωτήσεις που απαντήσατε λάθος επιλέγοντας "<strong>Ξανακάνε τα Λάθος</strong>" μετά την ολοκλήρωση.</li>
       </ul>
     </div>
   </div>
@@ -194,5 +196,38 @@
 	});
 
   </script>
+  <script>
+let wrongQuestions = [];
+
+// Τροποποίηση handleAnswer
+function handleAnswer(selected, correct) {
+  if (answered) return;
+  answered = true;
+  const resultDiv = document.getElementById('result');
+  if (selected === correct) {
+    resultDiv.innerText = '✅ Σωστή απάντηση!';
+    resultDiv.style.color = '#00ff88';
+  } else {
+    resultDiv.innerText = `❌ Λάθος. Σωστή απάντηση: ${correct}`;
+    resultDiv.style.color = '#ff5555';
+    // Προσθήκη της ερώτησης στον πίνακα λάθος
+    wrongQuestions.push(questions[currentQuestionIndex]);
+  }
+  document.getElementById('nextBtn').style.display = 'inline-block';
+}
+
+// Νέα συνάρτηση για επανάληψη μόνο των λαθών
+function startWrongQuestions() {
+  if (wrongQuestions.length === 0) {
+    alert("Δεν υπάρχουν ερωτήσεις που να απαντήθηκαν λάθος!");
+    return;
+  }
+  questions = [...wrongQuestions];
+  wrongQuestions = []; // Καθαρίζουμε για νέα προσπάθεια
+  currentQuestionIndex = 0;
+  randomMode = false; // Μπορείς να αλλάξεις αν θέλεις τυχαία σειρά
+  showQuestion();
+}
+</script>
 </body>
 </html>
