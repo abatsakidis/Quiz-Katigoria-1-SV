@@ -1,4 +1,4 @@
-const CACHE_NAME = 'quiz-cache-v5'; // άλλαξε για να αναγκαστεί ανανέωση
+const CACHE_NAME = 'quiz-cache-v6'; // άλλαξε έκδοση αν θες να αναγκάσεις καθαρισμό
 const VERSION_URL = 'https://abatsakidis.github.io/Quiz-Katigoria-1-SV/version.json';
 const VERSION_CACHE = 'version-cache';
 
@@ -6,12 +6,10 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll([
-        './',
-        './index.html',
         './manifest.json',
         './icon-192.png',
-        './icon-512.png'
-		'./erotiseis_sz1a.json'
+        './icon-512.png',
+        './erotiseis_sz1a.json'
       ]);
     })
   );
@@ -21,7 +19,6 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     (async () => {
-      // Διαγραφή παλιών caches
       const keys = await caches.keys();
       await Promise.all(
         keys.map((key) => {
@@ -30,15 +27,24 @@ self.addEventListener('activate', (event) => {
           }
         })
       );
-      await checkForUpdate(); // Έλεγχος στην ενεργοποίηση
+      await checkForUpdate();
     })()
   );
   self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
+  // Για HTML (πλοήγηση) -> πάντα από το δίκτυο (φρέσκο)
+  if (event.request.mode === 'navigate') {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
+  // Για όλα τα άλλα (εικόνες, json, manifest, κλπ)
   event.respondWith(
-    caches.match(event.request).then((response) => response || fetch(event.request))
+    caches.match(event.request).then((response) => {
+      return response || fetch(event.request);
+    })
   );
 });
 
@@ -78,7 +84,7 @@ function notifyClientsAboutUpdate() {
   });
 }
 
-// === Ακρόαση μηνυμάτων από το main JS ===
+// === Μήνυμα από main JS για manual έλεγχο ===
 self.addEventListener('message', (event) => {
   if (event.data === 'CHECK_FOR_UPDATE') {
     checkForUpdate();
