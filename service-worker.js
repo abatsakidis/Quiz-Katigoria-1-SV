@@ -11,6 +11,7 @@ self.addEventListener('install', (event) => {
         './manifest.json',
         './icon-192.png',
         './icon-512.png'
+		'./erotiseis_sz1a.json'
       ]);
     })
   );
