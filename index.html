@@ -45,7 +45,8 @@
       <br />
       <button onclick="startQuiz(false)">Ξεκίνα Κανονικά</button>
       <button onclick="startQuiz(true)">Τυχαία Σειρά</button>
-	  <button onclick="startWrongQuestions()" id="retryWrongBtn" style="margin-left: 0.5rem;">Ξανακάνε τα Λάθος</button>
+      <button onclick="startTest100()" style="margin-left: 0.5rem;">Τεστάκι</button>
+      <button onclick="startWrongQuestions()" id="retryWrongBtn" style="margin-left: 0.5rem;">Ξανακάνε τα Λάθος</button>
       <button id="helpBtn">Βοήθεια</button>
       <button id="installBtn">📲 Αποθήκευση ως εφαρμογή</button>
     </div>
@@ -68,7 +69,7 @@
         <li>Απαντήστε πατώντας στην επιλογή που πιστεύετε ότι είναι σωστή.</li>
         <li>Μετά από κάθε απάντηση εμφανίζεται η σωστή λύση και το κουμπί "<strong>Επόμενη</strong>".</li>
         <li>Στο τέλος των ερωτήσεων εμφανίζεται μήνυμα ολοκλήρωσης.</li>
-		<li>Μπορείτε να ξανακάνετε μόνο τις ερωτήσεις που απαντήσατε λάθος επιλέγοντας "<strong>Ξανακάνε τα Λάθος</strong>" μετά την ολοκλήρωση.</li>
+        <li>Μπορείτε να ξανακάνετε μόνο τις ερωτήσεις που απαντήσατε λάθος επιλέγοντας "<strong>Ξανακάνε τα Λάθος</strong>" μετά την ολοκλήρωση.</li>
       </ul>
     </div>
   </div>
@@ -77,12 +78,24 @@
     let questions = [], originalQuestions = [], currentQuestionIndex = 0, answered = false, randomMode = false;
     const STORAGE_KEY = 'radioamateur_quiz_currentQuestion';
     let deferredPrompt;
+    let wrongQuestions = [];
 
     async function loadQuestions() {
       const res = await fetch('erotiseis_sz1a.json');
       const data = await res.json();
       originalQuestions = data.map((q, i) => ({ ...q, originalIndex: i }));
       questions = [...originalQuestions];
+    }
+
+    async function startTest100() {
+      if (originalQuestions.length === 0) {
+        // Περιμένουμε να φορτωθούν οι ερωτήσεις
+        await loadQuestions();
+      }
+      questions = shuffle([...originalQuestions]).slice(0, 100);
+      currentQuestionIndex = 0;
+      randomMode = true;
+      showQuestion();
     }
 
     function startQuiz(useRandom) {
@@ -142,17 +155,34 @@
       if (answered) return;
       answered = true;
       const resultDiv = document.getElementById('result');
-      if (selected === correct) { resultDiv.innerText = '✅ Σωστή απάντηση!'; resultDiv.style.color = '#00ff88'; }
-      else { resultDiv.innerText = `❌ Λάθος. Σωστή απάντηση: ${correct}`; resultDiv.style.color = '#ff5555'; }
+      if (selected === correct) {
+        resultDiv.innerText = '✅ Σωστή απάντηση!';
+        resultDiv.style.color = '#00ff88';
+      } else {
+        resultDiv.innerText = `❌ Λάθος. Σωστή απάντηση: ${correct}`;
+        resultDiv.style.color = '#ff5555';
+        wrongQuestions.push(questions[currentQuestionIndex]);
+      }
       document.getElementById('nextBtn').style.display = 'inline-block';
+    }
+
+    function startWrongQuestions() {
+      if (wrongQuestions.length === 0) {
+        alert("Δεν υπάρχουν ερωτήσεις που να απαντήθηκαν λάθος!");
+        return;
+      }
+      questions = [...wrongQuestions];
+      wrongQuestions = [];
+      currentQuestionIndex = 0;
+      randomMode = false;
+      showQuestion();
     }
 
     document.getElementById('nextBtn').onclick = () => {
       currentQuestionIndex++;
       if (currentQuestionIndex < questions.length) showQuestion();
       else {
-	    document.getElementById('result').innerText = '';
-	  
+        document.getElementById('result').innerText = '';
         document.getElementById('question').innerText = '🎉 Ολοκλήρωσες όλες τις ερωτήσεις!';
         document.getElementById('answers').innerHTML = '';
         document.getElementById('nextBtn').style.display = 'none';
@@ -162,12 +192,10 @@
       }
     }
 
-    // Modal βοήθειας
     document.getElementById('helpBtn').onclick = () => document.getElementById('helpModal').style.display = 'flex';
     document.getElementById('modalCloseBtn').onclick = () => document.getElementById('helpModal').style.display = 'none';
     window.onclick = (e) => { if(e.target == document.getElementById('helpModal')) document.getElementById('helpModal').style.display = 'none'; }
 
-    // PWA install handling με μήνυμα επιβεβαίωσης
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
@@ -187,49 +215,14 @@
     }
 
     window.onload = loadQuestions;
-	
-	// Λήψη μηνυμάτων από τον Service Worker για νέα έκδοση
-	navigator.serviceWorker?.addEventListener('message', event => {
-	  if (event.data && event.data.type === 'NEW_VERSION_AVAILABLE') {
-		if (confirm("Υπάρχει νέα έκδοση του Quiz! Θέλεις να ανανεώσεις;")) {
-		  window.location.reload(true);
-		}
-	  }
-	});
-
+    
+    navigator.serviceWorker?.addEventListener('message', event => {
+      if (event.data && event.data.type === 'NEW_VERSION_AVAILABLE') {
+        if (confirm("Υπάρχει νέα έκδοση του Quiz! Θέλεις να ανανεώσεις;")) {
+          window.location.reload(true);
+        }
+      }
+    });
   </script>
-  <script>
-let wrongQuestions = [];
-
-// Τροποποίηση handleAnswer
-function handleAnswer(selected, correct) {
-  if (answered) return;
-  answered = true;
-  const resultDiv = document.getElementById('result');
-  if (selected === correct) {
-    resultDiv.innerText = '✅ Σωστή απάντηση!';
-    resultDiv.style.color = '#00ff88';
-  } else {
-    resultDiv.innerText = `❌ Λάθος. Σωστή απάντηση: ${correct}`;
-    resultDiv.style.color = '#ff5555';
-    // Προσθήκη της ερώτησης στον πίνακα λάθος
-    wrongQuestions.push(questions[currentQuestionIndex]);
-  }
-  document.getElementById('nextBtn').style.display = 'inline-block';
-}
-
-// Νέα συνάρτηση για επανάληψη μόνο των λαθών
-function startWrongQuestions() {
-  if (wrongQuestions.length === 0) {
-    alert("Δεν υπάρχουν ερωτήσεις που να απαντήθηκαν λάθος!");
-    return;
-  }
-  questions = [...wrongQuestions];
-  wrongQuestions = []; // Καθαρίζουμε για νέα προσπάθεια
-  currentQuestionIndex = 0;
-  randomMode = false; // Μπορείς να αλλάξεις αν θέλεις τυχαία σειρά
-  showQuestion();
-}
-</script>
 </body>
 </html>
